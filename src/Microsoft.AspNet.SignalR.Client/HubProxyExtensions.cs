@@ -64,7 +64,7 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 0, onData);
             };
@@ -100,7 +100,7 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 1,
                     () => { onData(Convert<T>(args[0], proxy.JsonSerializer)); });
@@ -137,12 +137,12 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 2, () =>
                 {
-                    onData(Convert<T1>(args[0], proxy.JsonSerializer),
-                        Convert<T2>(args[1], proxy.JsonSerializer));
+                    onData(Convert<T1>((JToken)args[0], proxy.JsonSerializer),
+                        Convert<T2>((JToken)args[1], proxy.JsonSerializer));
                 });
             };
 
@@ -177,7 +177,7 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 3, () =>
                 {
@@ -218,7 +218,7 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 4, () =>
                 {
@@ -273,7 +273,7 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 5, () =>
                 {
@@ -316,7 +316,7 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 6, () =>
                 {
@@ -360,7 +360,7 @@ namespace Microsoft.AspNet.SignalR.Client
 
             Subscription subscription = proxy.Subscribe(eventName);
 
-            Action<IList<JToken>> handler = args =>
+            Action<IList<object>> handler = args =>
             {
                 ExecuteCallback(eventName, args.Count, 7, () =>
                 {
@@ -385,7 +385,7 @@ namespace Microsoft.AspNet.SignalR.Client
         /// <param name="proxy">The <see cref="IHubProxy"/></param>
         /// <param name="eventName">The name of the event.</param>
         /// <returns>An <see cref="T:IObservable{object[]}"/>.</returns>
-        public static IObservable<IList<JToken>> Observe(this IHubProxy proxy, string eventName)
+        public static IObservable<IList<object>> Observe(this IHubProxy proxy, string eventName)
         {
             if (proxy == null)
             {
@@ -419,14 +419,20 @@ namespace Microsoft.AspNet.SignalR.Client
             }
         }
 
-        private static T Convert<T>(JToken obj, JsonSerializer serializer)
+        internal static T Convert<T>(object obj, JsonSerializer serializer)
         {
             if (obj == null)
             {
                 return default(T);
             }
 
-            return obj.ToObject<T>(serializer);
+            var jToken = obj as JToken;
+            if(jToken != null)
+            {
+                return jToken.ToObject<T>(serializer);
+            }
+
+            return (T)obj;
         }
     }
 }

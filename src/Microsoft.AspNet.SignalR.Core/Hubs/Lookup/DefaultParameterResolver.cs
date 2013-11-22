@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNet.SignalR.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.AspNet.SignalR.Hubs
 {
@@ -15,24 +17,21 @@ namespace Microsoft.AspNet.SignalR.Hubs
         /// <param name="descriptor">Parameter descriptor.</param>
         /// <param name="value">Value to resolve the parameter value from.</param>
         /// <returns>The parameter value.</returns>
-        public virtual object ResolveParameter(ParameterDescriptor descriptor, IJsonValue value)
+        public virtual object ResolveParameter(ParameterDescriptor descriptor, object value)
         {
             if (descriptor == null)
             {
                 throw new ArgumentNullException("descriptor");
             }
 
-            if (value == null)
+            var jToken = value as JToken;
+            if (jToken != null)
             {
-                throw new ArgumentNullException("value");
+                var serializer = GlobalHost.DependencyResolver.Resolve<JsonSerializer>();
+                return jToken.ToObject(descriptor.ParameterType, serializer);
             }
-
-            if (value.GetType() == descriptor.ParameterType)
-            {
-                return value;
-            }
-
-            return value.ConvertTo(descriptor.ParameterType);
+            
+            return value;
         }
 
         /// <summary>
@@ -41,7 +40,7 @@ namespace Microsoft.AspNet.SignalR.Hubs
         /// <param name="method">Method descriptor.</param>
         /// <param name="values">List of values to resolve parameter values from.</param>
         /// <returns>Array of parameter values.</returns>
-        public virtual IList<object> ResolveMethodParameters(MethodDescriptor method, IList<IJsonValue> values)
+        public virtual IList<object> ResolveMethodParameters(MethodDescriptor method, IList<object> values)
         {
             if (method == null)
             {
